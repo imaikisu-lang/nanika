@@ -2,33 +2,63 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Minimal Runner</title>
+    <title>Minimal Runner - Start Menu</title>
     <style>
         body { background: #111; color: white; text-align: center; font-family: sans-serif; overflow: hidden; }
         #game { position: relative; width: 400px; height: 500px; margin: 20px auto; background: #222; border: 4px solid #444; overflow: hidden; }
-        #player { position: absolute; left: 50px; width: 30px; height: 30px; background: #ffea00; border-radius: 4px; }
+        #player { position: absolute; left: 50px; width: 30px; height: 30px; background: #ffea00; border-radius: 4px; display: none; }
         .wall { position: absolute; right: -50px; width: 50px; background: #ff4757; }
+        
+        /* スタート画面のスタイル */
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #ffea00; border: none; border-radius: 5px; font-weight: bold; }
+        button:hover { background: #fff; }
     </style>
 </head>
 <body>
     <div id="score">0m 進んだ</div>
-    <div id="game"><div id="player"></div></div>
+    <div id="game">
+        <div id="start-screen">
+            <p>不安定な心を、飛ばし続けよう</p>
+            <button id="start-button">旅を始める</button>
+        </div>
+        <div id="player"></div>
+    </div>
     <p>クリックかスペースキーで「浮上」！</p>
 
     <script>
         const playerEl = document.getElementById('player');
         const game = document.getElementById('game');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+        
         let py = 250, velocity = 0, score = 0, frames = 0;
         let walls = [];
+        let isPlaying = false; // ゲーム中かどうかのフラグ
         const gravity = 0.4, jump = -7;
 
+        // 【手：スタートの意志】
+        startButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // ボタンクリックがゲームのジャンプにならないように
+            startGame();
+        });
+
+        function startGame() {
+            isPlaying = true;
+            startScreen.style.display = 'none';
+            playerEl.style.display = 'block';
+            requestAnimationFrame(update);
+        }
+
         function update() {
-            // 1. 手の反応：重力と速度の計算
+            if (!isPlaying) return;
+
+            // 1. 手の反応
             velocity += gravity;
             py += velocity;
             playerEl.style.top = py + 'px';
 
-            // 2. 目と脳：壁の生成と移動
+            // 2. 目と脳：壁の生成
             frames++;
             if (frames % 100 === 0) {
                 const gapTop = Math.random() * 250 + 50;
@@ -37,41 +67,4 @@
 
             walls.forEach((w, i) => {
                 w.x -= 3;
-                w.topEl.style.left = w.x + 'px';
-                w.botEl.style.left = w.x + 'px';
-
-                // 当たり判定
-                if (w.x < 80 && w.x > 20) {
-                    if (py < w.gap || py + 30 > w.gap + 120) {
-                        alert("心に傷がついた... 記録: " + score + "m");
-                        location.reload();
-                    }
-                }
-                if (w.x < -50) {
-                    w.topEl.remove(); w.botEl.remove();
-                    walls.splice(i, 1);
-                    score++;
-                    document.getElementById('score').innerText = score + "m 進んだ";
-                }
-            });
-
-            // 画面外落下
-            if (py > 470 || py < 0) { location.reload(); }
-            requestAnimationFrame(update);
-        }
-
-        function createWall(gap) {
-            const top = document.createElement('div');
-            top.className = 'wall'; top.style.top = '0'; top.style.height = gap + 'px';
-            const bot = document.createElement('div');
-            bot.className = 'wall'; bot.style.top = (gap + 120) + 'px'; bot.style.height = '500px';
-            game.appendChild(top); game.appendChild(bot);
-            walls.push({ x: 400, gap: gap, topEl: top, botEl: bot });
-        }
-
-        window.addEventListener('mousedown', () => velocity = jump);
-        window.addEventListener('keydown', (e) => { if(e.code==='Space') velocity = jump; });
-        update();
-    </script>
-</body>
-</html>
+                w.topEl.
