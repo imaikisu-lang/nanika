@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Minimal Runner</title>
+    <style>
+        body { background: #111; color: white; text-align: center; font-family: sans-serif; overflow: hidden; }
+        #game { position: relative; width: 400px; height: 500px; margin: 20px auto; background: #222; border: 4px solid #444; overflow: hidden; }
+        #player { position: absolute; left: 50px; width: 30px; height: 30px; background: #ffea00; border-radius: 4px; }
+        .wall { position: absolute; right: -50px; width: 50px; background: #ff4757; }
+    </style>
+</head>
+<body>
+    <div id="score">0m 進んだ</div>
+    <div id="game"><div id="player"></div></div>
+    <p>クリックかスペースキーで「浮上」！</p>
+
+    <script>
+        const playerEl = document.getElementById('player');
+        const game = document.getElementById('game');
+        let py = 250, velocity = 0, score = 0, frames = 0;
+        let walls = [];
+        const gravity = 0.4, jump = -7;
+
+        function update() {
+            // 1. 手の反応：重力と速度の計算
+            velocity += gravity;
+            py += velocity;
+            playerEl.style.top = py + 'px';
+
+            // 2. 目と脳：壁の生成と移動
+            frames++;
+            if (frames % 100 === 0) {
+                const gapTop = Math.random() * 250 + 50;
+                createWall(gapTop);
+            }
+
+            walls.forEach((w, i) => {
+                w.x -= 3;
+                w.topEl.style.left = w.x + 'px';
+                w.botEl.style.left = w.x + 'px';
+
+                // 当たり判定
+                if (w.x < 80 && w.x > 20) {
+                    if (py < w.gap || py + 30 > w.gap + 120) {
+                        alert("心に傷がついた... 記録: " + score + "m");
+                        location.reload();
+                    }
+                }
+                if (w.x < -50) {
+                    w.topEl.remove(); w.botEl.remove();
+                    walls.splice(i, 1);
+                    score++;
+                    document.getElementById('score').innerText = score + "m 進んだ";
+                }
+            });
+
+            // 画面外落下
+            if (py > 470 || py < 0) { location.reload(); }
+            requestAnimationFrame(update);
+        }
+
+        function createWall(gap) {
+            const top = document.createElement('div');
+            top.className = 'wall'; top.style.top = '0'; top.style.height = gap + 'px';
+            const bot = document.createElement('div');
+            bot.className = 'wall'; bot.style.top = (gap + 120) + 'px'; bot.style.height = '500px';
+            game.appendChild(top); game.appendChild(bot);
+            walls.push({ x: 400, gap: gap, topEl: top, botEl: bot });
+        }
+
+        window.addEventListener('mousedown', () => velocity = jump);
+        window.addEventListener('keydown', (e) => { if(e.code==='Space') velocity = jump; });
+        update();
+    </script>
+</body>
+</html>
